@@ -1,13 +1,14 @@
-const CACHE = 'coches-v1';
+const CACHE = 'coches-v2';
+const BASE = '/coches-app';
 const ASSETS = [
-  '/',
-  '/index.html',
-  '/Buscador_coches_cliente.html',
-  '/Comparador_coches_DE_ES.html',
-  '/manifest.webmanifest',
-  '/icon-192.png',
-  '/icon-512.png',
-  '/apple-touch-icon.png'
+  BASE + '/',
+  BASE + '/index.html',
+  BASE + '/Buscador_coches_cliente.html',
+  BASE + '/Comparador_coches_DE_ES.html',
+  BASE + '/manifest.webmanifest',
+  BASE + '/icon-192.png',
+  BASE + '/icon-512.png',
+  BASE + '/apple-touch-icon.png'
 ];
 
 self.addEventListener('install', e => {

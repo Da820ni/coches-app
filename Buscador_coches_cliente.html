@@ -142,7 +142,7 @@ function buildMobile(){
   const m=val('marca'),mod=val('modelo'),anio=val('anio'),pr=val('precio'),km=val('km'),cb=val('comb'),co=val('color');
   let u='https://suchen.mobile.de/fahrzeuge/search.html?dam=false&isSearchRequest=true&vc=Car&sb=rel';
   if(MARCAS[m]) u+='&makeModelVariant1.makeId='+MARCAS[m][0];
-  if(mod) u+='&makeModelVariant1.modelDescription='+encodeURIComponent(mod);
+  if(mod) u+='&q='+encodeURIComponent(mod);
   if(anio) u+='&fr='+anio+'%3A';
   if(pr) u+='&p=%3A'+pr;
   if(km) u+='&ml=%3A'+km;
