@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Buscador de coches para cliente · mobile.de + coches.net</title>
+<style>
+  :root{--bg:#0f1419;--card:#1a2129;--card2:#222b35;--line:#313c48;--txt:#e8edf2;--mut:#9aa7b4;--accent:#3b82f6;--green:#22c55e;--orange:#ff7a1a;--red:#e11d48;}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font-family:'Segoe UI',Roboto,Arial,sans-serif;line-height:1.45}
+  .wrap{max-width:980px;margin:0 auto;padding:24px 18px 70px}
+  h1{font-size:24px;margin:0 0 4px}
+  .sub{color:var(--mut);font-size:14px;margin:0 0 22px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
+  .fld{display:flex;flex-direction:column}
+  .fld label{font-size:12px;color:var(--mut);margin-bottom:5px;text-transform:uppercase;letter-spacing:.03em}
+  input,select{background:var(--card2);border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:9px 10px;font-size:14px;font-family:inherit;width:100%}
+  .actions{display:flex;flex-wrap:wrap;gap:12px;margin:22px 0 8px;align-items:center}
+  button{cursor:pointer;border:none;border-radius:10px;padding:12px 18px;font-size:15px;font-weight:700;color:#fff}
+  .mob{background:var(--orange)} .cn{background:var(--red)} .both{background:var(--accent)} .copy{background:#2a3540;border:1px solid var(--line);color:var(--txt);font-weight:600;font-size:13px;padding:9px 14px}
+  button:hover{filter:brightness(1.08)}
+  .out{margin-top:20px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;display:none}
+  .out h3{margin:0 0 10px;font-size:15px}
+  .urlbox{background:#11181f;border:1px solid var(--line);border-radius:9px;padding:10px 12px;font-family:Consolas,monospace;font-size:12px;color:#9fd0ff;word-break:break-all;margin:6px 0 14px}
+  .ficha{background:#11181f;border:1px solid var(--line);border-radius:9px;padding:12px;font-size:14px;white-space:pre-wrap}
+  .note{background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:13px;color:var(--mut);margin-top:18px}
+  a{color:#7cc0ff}
+  .tag{display:inline-block;background:#11181f;border:1px solid var(--line);border-radius:6px;padding:1px 7px;font-size:12px;color:var(--mut);margin-left:6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Buscador de coches para tu cliente</h1>
+  <p class="sub">El cliente describe el coche que quiere → genera enlaces a la búsqueda <b>ya filtrada</b> en mobile.de (Alemania) y coches.net (España). Un clic y ves los anuncios reales.</p>
+
+  <div class="grid">
+    <div class="fld"><label>Marca</label><select id="marca"></select></div>
+    <div class="fld"><label>Modelo <span class="tag">opcional</span></label><input id="modelo" placeholder="p. ej. Golf, Serie 3, Tucson"></div>
+    <div class="fld"><label>Año desde</label><input id="anio" type="number" placeholder="2019"></div>
+    <div class="fld"><label>Precio máx (€)</label><input id="precio" type="number" placeholder="25000"></div>
+    <div class="fld"><label>Km máximo</label><input id="km" type="number" placeholder="120000"></div>
+    <div class="fld"><label>Combustible</label><select id="comb">
+      <option value="">Cualquiera</option><option value="Gasolina">Gasolina</option><option value="Diésel">Diésel</option>
+      <option value="Híbrido">Híbrido</option><option value="PHEV">Híbrido enchufable</option><option value="Eléctrico">Eléctrico</option></select></div>
+    <div class="fld"><label>Color</label><select id="color">
+      <option value="">Cualquiera</option><option>Negro</option><option>Blanco</option><option>Gris</option><option>Plata</option>
+      <option>Azul</option><option>Rojo</option><option>Verde</option><option>Marrón</option><option>Beige</option><option>Amarillo</option><option>Naranja</option></select></div>
+    <div class="fld"><label>Provincia (coches.net) <span class="tag">opcional</span></label><input id="prov" placeholder="madrid, barcelona, valencia..."></div>
+  </div>
+
+  <div class="actions">
+    <button class="both" onclick="go('both')">🔍 Buscar en las dos</button>
+    <button class="mob" onclick="go('mob')">mobile.de (Alemania)</button>
+    <button class="cn" onclick="go('cn')">coches.net (España)</button>
+    <button class="copy" onclick="genFicha()">📋 Copiar ficha del cliente</button>
+  </div>
+
+  <div class="out" id="out"></div>
+
+  <div class="note">
+    <b>Consejos:</b> en <b>Modelo</b> pon el nombre base (Golf, Serie 3, Tucson) para que coches.net acierte; la versión exacta (GTI, 2.0 TDI…) la afina mejor mobile.de.
+    <b>mobile.de</b> aplica todos los filtros (precio, km, color…). <b>coches.net</b> filtra marca/modelo/combustible/año por URL; el precio, km y color los ajustas en su web (su buscador no admite todo por enlace).
+    El botón <b>Ficha del cliente</b> copia un resumen para que lo guardes en tus notas/CRM.
+  </div>
+</div>
+
+<script>
+// marca: [mobileId, cochesSlug]
+const MARCAS={
+ 'Audi':[1900,'audi'],'BMW':[3500,'bmw'],'Mercedes-Benz':[17200,'mercedes_benz'],'Volkswagen':[25200,'volkswagen'],
+ 'Seat':[22500,'seat'],'Cupra':[3,'cupra'],'Skoda':[22900,'skoda'],'Renault':[20700,'renault'],'Peugeot':[19300,'peugeot'],
+ 'Citroën':[5900,'citroen'],'Opel':[19000,'opel'],'Ford':[9000,'ford'],'Toyota':[24100,'toyota'],'Hyundai':[11600,'hyundai'],
+ 'Kia':[13200,'kia'],'Nissan':[18700,'nissan'],'Mazda':[16800,'mazda'],'Honda':[11000,'honda'],'Fiat':[8800,'fiat'],
+ 'Volvo':[25100,'volvo'],'MINI':[17500,'mini'],'Mitsubishi':[17700,'mitsubishi'],'Suzuki':[23600,'suzuki'],'Dacia':[6600,'dacia'],
+ 'Jeep':[12600,'jeep'],'Land Rover':[14800,'land_rover'],'Jaguar':[12400,'jaguar'],'Porsche':[20100,'porsche'],
+ 'Alfa Romeo':[900,'alfa_romeo'],'DS Automobiles':[235,'ds'],'Lexus':[15200,'lexus'],'Subaru':[23500,'subaru'],
+ 'Smart':[23000,'smart'],'Tesla':[135,'tesla']
+};
+const FT_MOB={'Gasolina':'PETROL','Diésel':'DIESEL','Híbrido':'HYBRID','PHEV':'PLUGIN_HYBRID','Eléctrico':'ELECTRICITY'};
+const FT_CN={'Gasolina':'gasolina','Diésel':'diesel','Híbrido':'hibrido','PHEV':'hibrido_enchufable','Eléctrico':'electrico'};
+const COL_MOB={'Negro':'BLACK','Blanco':'WHITE','Gris':'GREY','Plata':'SILVER','Azul':'BLUE','Rojo':'RED','Verde':'GREEN','Marrón':'BROWN','Beige':'BEIGE','Amarillo':'YELLOW','Naranja':'ORANGE'};
+
+(function(){ const s=document.getElementById('marca'); s.innerHTML=Object.keys(MARCAS).sort().map(m=>`<option>${m}</option>`).join(''); s.value='BMW'; })();
+
+function val(id){ return (document.getElementById(id).value||'').trim(); }
+function slug(s){ return s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,''); }
+
+function buildMobile(){
+  const m=val('marca'),mod=val('modelo'),anio=val('anio'),pr=val('precio'),km=val('km'),cb=val('comb'),co=val('color');
+  let u='https://suchen.mobile.de/fahrzeuge/search.html?dam=false&isSearchRequest=true&vc=Car&sb=rel';
+  if(MARCAS[m]) u+='&makeModelVariant1.makeId='+MARCAS[m][0];
+  if(mod) u+='&makeModelVariant1.modelDescription='+encodeURIComponent(mod);
+  if(anio) u+='&fr='+anio+'%3A';
+  if(pr) u+='&p=%3A'+pr;
+  if(km) u+='&ml=%3A'+km;
+  if(cb&&FT_MOB[cb]) u+='&ft='+FT_MOB[cb];
+  if(co&&COL_MOB[co]) u+='&colors='+COL_MOB[co];
+  return u;
+}
+function buildCochesnet(){
+  const m=val('marca'),mod=val('modelo'),anio=val('anio'),cb=val('comb'),pv=val('prov');
+  let p='https://www.coches.net/'+(MARCAS[m]?MARCAS[m][1]:slug(m))+'/';
+  if(mod) p+=slug(mod)+'/';
+  if(cb&&FT_CN[cb]) p+=FT_CN[cb]+'/';
+  p+='segunda-mano/';
+  if(anio) p+=anio+'/';
+  if(pv) p+=slug(pv)+'/';
+  return p;
+}
+function resumen(){
+  const m=val('marca'),mod=val('modelo'),anio=val('anio'),pr=val('precio'),km=val('km'),cb=val('comb'),co=val('color'),pv=val('prov');
+  let l=['Marca: '+m]; if(mod)l.push('Modelo: '+mod); if(anio)l.push('Año desde: '+anio);
+  if(pr)l.push('Precio máx: '+(+pr).toLocaleString('es-ES')+' €'); if(km)l.push('Km máx: '+(+km).toLocaleString('es-ES'));
+  if(cb)l.push('Combustible: '+cb); if(co)l.push('Color: '+co); if(pv)l.push('Zona: '+pv);
+  return l.join('\n');
+}
+function go(which){
+  const mob=buildMobile(), cn=buildCochesnet();
+  const out=document.getElementById('out'); out.style.display='block';
+  out.innerHTML='<h3>Búsqueda generada</h3>'+
+    '<div><b style="color:#ff7a1a">mobile.de (filtro completo):</b><div class="urlbox">'+mob+'</div></div>'+
+    '<div><b style="color:#e11d48">coches.net (marca/modelo/combustible/año):</b><div class="urlbox">'+cn+'</div></div>'+
+    '<div class="note" style="margin-top:0">Si el botón no abre la pestaña, copia y pega la URL en el navegador.</div>';
+  if(which==='mob'||which==='both') window.open(mob,'_blank');
+  if(which==='cn'||which==='both') window.open(cn,'_blank');
+}
+function genFicha(){
+  const txt=resumen()+'\n\nmobile.de: '+buildMobile()+'\ncoches.net: '+buildCochesnet();
+  navigator.clipboard.writeText(txt).then(()=>{
+    const out=document.getElementById('out'); out.style.display='block';
+    out.innerHTML='<h3>✅ Ficha copiada al portapapeles</h3><div class="ficha">'+txt.replace(/</g,'&lt;')+'</div>';
+  },()=>{ alert('No se pudo copiar; aquí tienes la ficha:\n\n'+resumen()); });
+}
+</script>
+</body>
+</html>

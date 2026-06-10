@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Herramientas de Coches</title>
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0f1419">
+
+<!-- Apple PWA -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Coches">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+
+<style>
+  :root {
+    --bg: #0f1419;
+    --card: #1a2129;
+    --line: #313c48;
+    --txt: #e8edf2;
+    --mut: #9aa7b4;
+    --accent: #3b82f6;
+    --orange: #ff7a1a;
+    --red: #e11d48;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--txt);
+    font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+  }
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100dvh;
+    padding: 24px 18px;
+    padding-top: max(24px, env(safe-area-inset-top));
+    padding-bottom: max(24px, env(safe-area-inset-bottom));
+  }
+  .logo {
+    width: 72px;
+    height: 72px;
+    margin-bottom: 20px;
+  }
+  h1 {
+    font-size: clamp(22px, 5vw, 30px);
+    font-weight: 800;
+    letter-spacing: -.5px;
+    text-align: center;
+    margin-bottom: 6px;
+  }
+  .sub {
+    color: var(--mut);
+    font-size: 14px;
+    text-align: center;
+    margin-bottom: 44px;
+    max-width: 340px;
+  }
+  .menu {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+    max-width: 400px;
+  }
+  .btn {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 22px 24px;
+    text-decoration: none;
+    color: var(--txt);
+    transition: transform 0.15s, filter 0.15s, border-color 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .btn:active { transform: scale(0.97); filter: brightness(1.1); }
+  .btn-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 28px;
+  }
+  .btn-icon.search { background: rgba(255,122,26,.18); }
+  .btn-icon.compare { background: rgba(59,130,246,.18); }
+  .btn-text strong {
+    display: block;
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 3px;
+  }
+  .btn-text span {
+    font-size: 13px;
+    color: var(--mut);
+    line-height: 1.35;
+  }
+  .footer {
+    margin-top: 48px;
+    font-size: 12px;
+    color: #3d4f5e;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<svg class="logo" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="72" height="72" rx="18" fill="#1a2129"/>
+  <path d="M13 44v4a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-2h30v2a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-4" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M11 44h50M18 44l6-12h24l6 12" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M24 32l3-7h18l3 7" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="22" cy="44" r="4" fill="#ff7a1a"/>
+  <circle cx="50" cy="44" r="4" fill="#ff7a1a"/>
+</svg>
+
+<h1>Herramientas de Coches</h1>
+<p class="sub">Busca y compara coches de Alemania y España sin salir de la app</p>
+
+<nav class="menu">
+  <a class="btn" href="Buscador_coches_cliente.html">
+    <div class="btn-icon search">🔍</div>
+    <div class="btn-text">
+      <strong>Buscar coches</strong>
+      <span>Genera enlaces ya filtrados a mobile.de y coches.net</span>
+    </div>
+  </a>
+  <a class="btn" href="Comparador_coches_DE_ES.html">
+    <div class="btn-icon compare">⚖️</div>
+    <div class="btn-text">
+      <strong>Comparar coches</strong>
+      <span>Pega anuncios, compara precio/km/año y normaliza el valor</span>
+    </div>
+  </a>
+</nav>
+
+<p class="footer">Funciona sin conexión · Añade a pantalla de inicio</p>
+
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>

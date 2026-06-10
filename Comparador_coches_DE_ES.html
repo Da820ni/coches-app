@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Comparador de coches · ¿son realmente comparables?</title>
+<style>
+  :root{
+    --bg:#0f1419; --card:#1a2129; --card2:#222b35; --line:#313c48;
+    --txt:#e8edf2; --mut:#9aa7b4; --accent:#3b82f6; --green:#22c55e; --amber:#f59e0b; --red:#ef4444;
+    --chip:#2a3540;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;line-height:1.45}
+  .wrap{max-width:1180px;margin:0 auto;padding:22px 18px 60px}
+  h1{font-size:24px;margin:0 0 4px}
+  .sub{color:var(--mut);font-size:14px;margin:0 0 18px}
+  .bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:16px}
+  .bar label{font-size:13px;color:var(--mut)}
+  input,textarea,select{background:var(--card2);border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:7px 9px;font-size:13px;font-family:inherit}
+  input[type=number]{width:90px}
+  textarea{width:100%;min-height:70px;resize:vertical}
+  button{cursor:pointer;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600}
+  .btn{background:var(--accent);color:#fff}
+  .btn:hover{filter:brightness(1.1)}
+  .btn2{background:var(--chip);color:var(--txt);border:1px solid var(--line)}
+  .cars{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px;margin-bottom:16px}
+  .car{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px}
+  .car h3{margin:0 0 8px;font-size:15px;display:flex;align-items:center;gap:8px}
+  .dot{width:11px;height:11px;border-radius:50%}
+  .fld{margin-bottom:8px}
+  .fld span{display:block;font-size:11px;color:var(--mut);margin-bottom:3px;text-transform:uppercase;letter-spacing:.03em}
+  .fld input,.fld select{width:100%}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .mini{font-size:11px;color:var(--mut)}
+  .results{margin-top:8px}
+  table{border-collapse:collapse;width:100%;font-size:13px;background:var(--card);border-radius:12px;overflow:hidden}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:center}
+  th{background:#1f2933;color:var(--mut);font-weight:600;font-size:12px}
+  td.lab{text-align:left;color:var(--mut);background:#1c242d;white-space:nowrap}
+  .best{background:rgba(34,197,94,.16);font-weight:700;color:#bbf7d0}
+  .worst{background:rgba(239,68,68,.14)}
+  .sec{margin:26px 0 10px;font-size:17px;border-left:3px solid var(--accent);padding-left:10px}
+  .pill{display:inline-block;padding:2px 9px;border-radius:20px;font-size:12px;font-weight:700}
+  .pg{background:rgba(34,197,94,.18);color:#86efac}.pa{background:rgba(245,158,11,.18);color:#fcd34d}.pr{background:rgba(239,68,68,.18);color:#fca5a5}
+  .yes{color:var(--green);font-weight:700}.no{color:#5b6773}
+  .note{background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:13px;color:var(--mut);margin-top:14px}
+  .big{font-size:20px;font-weight:700}
+  a{color:#60a5fa}
+  .hide{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Comparador de coches · ¿se parecen de verdad?</h1>
+  <p class="sub">Pega el enlace y el <b>texto del anuncio</b> de 2 a 4 coches (de mobile.de, coches.net, etc.). La herramienta autorrellena los datos, normaliza el precio por km/año y te dice cuánto se parecen para que compares peras con peras.</p>
+
+  <div class="bar">
+    <label>Coches:</label>
+    <button class="btn2" onclick="setN(2)">2</button>
+    <button class="btn2" onclick="setN(3)">3</button>
+    <button class="btn2" onclick="setN(4)">4</button>
+    <span style="width:14px"></span>
+    <label>Depreciación por km (€/1.000 km):</label><input type="number" id="kmF" value="60" step="5">
+    <label>Por antigüedad (€/año):</label><input type="number" id="yrF" value="1500" step="100">
+    <span style="flex:1"></span>
+    <button class="btn" onclick="compare()">▶ Comparar</button>
+  </div>
+
+  <div class="cars" id="cars"></div>
+  <div class="results" id="results"></div>
+
+  <div class="note" id="howto">
+    <b>Cómo usarlo:</b> en cada coche, copia el texto del anuncio (Ctrl+A / Ctrl+C en la página del coche) y pégalo en el recuadro grande; pulsa <i>Autorrellenar</i>. Revisa los campos (puedes corregir a mano) y dale a <b>Comparar</b>.
+    El <b>“Precio ajustado”</b> pone todos los coches en igualdad de km y año (usando los factores de arriba): el más barato ahí es la mejor compra <i>like-for-like</i>. La <b>similitud</b> te avisa si dos coches son tan distintos que comparar sus precios no tiene sentido.
+  </div>
+</div>
+
+<script>
+const COLORS=['#3b82f6','#22c55e','#f59e0b','#a855f7'];
+let N=2;
+
+const EXTRAS=[
+ ['Navegación',/navi|navegaci/i],
+ ['Faros LED',/\bLED\b/i],
+ ['Faros láser/matrix',/laser|matrix/i],
+ ['Xenón',/xenon|xenón/i],
+ ['Cuero / piel',/leder|cuero|piel|nappa/i],
+ ['Alcantara',/alcantara/i],
+ ['Techo panorámico/solar',/panorama|schiebedach|techo (solar|panor)/i],
+ ['Cámara / 360º',/kamera|cámara|camara|rückfahr|r.view|360/i],
+ ['Control crucero adapt. (ACC)',/\bACC\b|abstandstempomat|adaptive cruise|crucero adapt/i],
+ ['Control crucero',/tempomat|cruise|crucero/i],
+ ['Enganche remolque (AHK)',/\bAHK\b|anhängerkupplung|enganche|bola de/i],
+ ['Asientos calefactables',/sitzheizung|\bSHZ\b|asientos? calefact|calefac.*asiento/i],
+ ['Asientos eléctricos/memory',/elektr.*sitz|asientos? el[eé]ctric|memory|sport-?sitz/i],
+ ['Sensores aparcamiento (PDC)',/\bPDC\b|einparkhilfe|sensor.*aparc|parksensor/i],
+ ['Head-Up Display',/head.?up|\bHUD\b/i],
+ ['Keyless / sin llave',/keyless|schlüssellos|sin llave|comfort access/i],
+ ['Apple CarPlay/Android',/carplay|android auto|smartlink/i],
+ ['Climatizador (bi/tri-zona)',/klimaautomatik|climatizador|climatronic|bizona|2.?zonen|3.?zonen|tri-?zona/i],
+ ['Llantas aleación',/alufelgen|llantas|alloy|\d{2}\s?zoll|\d{2}\s?(pulgadas|")/i],
+ ['DAB radio',/\bDAB\b/i],
+ ['HiFi / sonido premium',/harman|h\/k|h&k|bose|bang.?olufsen|sonido premium|hifi/i],
+ ['Suspensión adaptativa',/adaptive.*fahrwerk|m.?sport fahrwerk|suspensi.*adapt|dcc/i],
+ ['Start&Stop / mild hybrid',/start.?stopp|mild.?hybrid|48v|bmt/i],
+];
+
+function num(s){ if(s==null) return null; s=(''+s).replace(/\./g,'').replace(',','.').replace(/[^\d.]/g,''); const v=parseFloat(s); return isNaN(v)?null:v; }
+
+function parseAnuncio(txt){
+  const t=txt.replace(/\s+/g,' ');
+  const o={};
+  // precio: mayor importe en € razonable
+  const eu=[...t.matchAll(/([\d][\d.]{2,})\s*€/g)].map(m=>num(m[1])).filter(v=>v&&v>=1500&&v<=300000);
+  if(eu.length) o.precio=Math.max(...eu);
+  // km
+  const km=t.match(/([\d][\d.]{1,})\s*km\b/i); if(km) o.km=num(km[1]);
+  // año/mes: EZ MM/YYYY ó MM/YYYY ó año suelto 19xx/20xx
+  let y=t.match(/EZ\s*(\d{2})\/(\d{4})/i)||t.match(/\b(\d{2})\/(20\d{2})\b/);
+  if(y){o.mes=y[1]; o.anio=+y[2];}
+  else { const ys=t.match(/\b(20[0-2]\d|19\d\d)\b/); if(ys) o.anio=+ys[1]; }
+  // potencia: kW(PS) ó cv ó CV
+  let p=t.match(/(\d{2,3})\s*kW\s*\((\d{2,3})\s*PS\)/i); if(p) o.cv=+p[2];
+  if(!o.cv){ const cv=t.match(/(\d{2,3})\s*(cv|ps|hp)\b/i); if(cv) o.cv=+cv[1]; }
+  // combustible
+  if(/elektro|el[eé]ctrico|\bEV\b/i.test(t)) o.comb='Eléctrico';
+  else if(/plug.?in|phev|enchufable/i.test(t)) o.comb='PHEV';
+  else if(/hybrid|h[ií]brido|hev|mhev/i.test(t)) o.comb='Híbrido';
+  else if(/diesel|di[eé]sel|tdi|hdi|cdi|dci|bluehdi|tdci/i.test(t)) o.comb='Diésel';
+  else if(/benzin|gasolina|tsi|tfsi|tce|gdi|ecoboost/i.test(t)) o.comb='Gasolina';
+  // extras
+  o.extras=EXTRAS.filter(([n,re])=>re.test(t)).map(([n])=>n);
+  return o;
+}
+
+function carCard(i){
+  return `<div class="car" id="car${i}">
+    <h3><span class="dot" style="background:${COLORS[i]}"></span>Coche ${i+1}</h3>
+    <div class="fld"><span>Enlace del anuncio (se guarda como referencia)</span><input id="link${i}" placeholder="https://..."></div>
+    <div class="fld"><span>Pega aquí el texto del anuncio</span><textarea id="paste${i}" placeholder="Copia (Ctrl+A, Ctrl+C) el texto de la página del coche y pégalo aquí"></textarea></div>
+    <button class="btn2" onclick="autofill(${i})">✨ Autorrellenar</button>
+    <div style="height:10px"></div>
+    <div class="fld"><span>Nombre / versión</span><input id="name${i}" placeholder="p. ej. BMW 520d Luxury 2020"></div>
+    <div class="row2">
+      <div class="fld"><span>Precio (€)</span><input id="precio${i}" type="number"></div>
+      <div class="fld"><span>Año</span><input id="anio${i}" type="number"></div>
+    </div>
+    <div class="row2">
+      <div class="fld"><span>Km</span><input id="km${i}" type="number"></div>
+      <div class="fld"><span>CV</span><input id="cv${i}" type="number"></div>
+    </div>
+    <div class="fld"><span>Combustible</span>
+      <select id="comb${i}"><option value="">—</option><option>Gasolina</option><option>Diésel</option><option>Híbrido</option><option>PHEV</option><option>Eléctrico</option></select></div>
+    <div class="fld"><span>Equipamiento / extras (uno por línea)</span><textarea id="extras${i}" style="min-height:54px"></textarea></div>
+  </div>`;
+}
+
+function render(){
+  let h=''; for(let i=0;i<N;i++) h+=carCard(i);
+  document.getElementById('cars').innerHTML=h;
+}
+function setN(n){ N=n; render(); document.getElementById('results').innerHTML=''; }
+
+function autofill(i){
+  const o=parseAnuncio(document.getElementById('paste'+i).value||'');
+  if(o.precio!=null) document.getElementById('precio'+i).value=Math.round(o.precio);
+  if(o.km!=null) document.getElementById('km'+i).value=Math.round(o.km);
+  if(o.anio!=null) document.getElementById('anio'+i).value=o.anio;
+  if(o.cv!=null) document.getElementById('cv'+i).value=o.cv;
+  if(o.comb) document.getElementById('comb'+i).value=o.comb;
+  if(o.extras&&o.extras.length) document.getElementById('extras'+i).value=o.extras.join('\n');
+  const nm=document.getElementById('name'+i);
+  if(!nm.value){ const t=(document.getElementById('paste'+i).value||'').replace(/\s+/g,' ').trim(); nm.value=t.slice(0,40); }
+}
+
+function getCar(i){
+  const ex=(document.getElementById('extras'+i).value||'').split('\n').map(s=>s.trim()).filter(Boolean);
+  return {
+    i, name:document.getElementById('name'+i).value||('Coche '+(i+1)),
+    link:document.getElementById('link'+i).value||'',
+    precio:num(document.getElementById('precio'+i).value),
+    anio:num(document.getElementById('anio'+i).value),
+    km:num(document.getElementById('km'+i).value),
+    cv:num(document.getElementById('cv'+i).value),
+    comb:document.getElementById('comb'+i).value||'—',
+    extras:ex
+  };
+}
+function fmt(v,suf){ return v==null?'—':v.toLocaleString('es-ES')+(suf||''); }
+function eur(v){ return v==null?'—':'€'+Math.round(v).toLocaleString('es-ES'); }
+
+function similitud(a,b){
+  let s=0,w=0;
+  // combustible 28
+  w+=28; s+=(a.comb!=='—'&&a.comb===b.comb)?28:(a.comb==='—'||b.comb==='—'?14:0);
+  // km 24
+  if(a.km!=null&&b.km!=null){ w+=24; const d=Math.abs(a.km-b.km); s+=24*Math.max(0,1-d/70000); }
+  // año 18
+  if(a.anio!=null&&b.anio!=null){ w+=18; const d=Math.abs(a.anio-b.anio); s+=18*Math.max(0,1-d/4); }
+  // cv 14
+  if(a.cv!=null&&b.cv!=null){ w+=14; const d=Math.abs(a.cv-b.cv)/Math.max(a.cv,b.cv); s+=14*Math.max(0,1-d/0.25); }
+  // extras 16 (Jaccard)
+  const A=new Set(a.extras),B=new Set(b.extras); const inter=[...A].filter(x=>B.has(x)).length; const uni=new Set([...A,...B]).size;
+  w+=16; s+=uni? 16*(inter/uni):16;
+  return Math.round(100*s/w);
+}
+
+function compare(){
+  const cars=[]; for(let i=0;i<N;i++) cars.push(getCar(i));
+  const kmF=num(document.getElementById('kmF').value)||0;     // €/1000km
+  const yrF=num(document.getElementById('yrF').value)||0;     // €/año
+  const kms=cars.map(c=>c.km).filter(v=>v!=null);
+  const yrs=cars.map(c=>c.anio).filter(v=>v!=null);
+  const refKm=kms.length?Math.min(...kms):0;     // baseline: el de menos km
+  const refYr=yrs.length?Math.max(...yrs):0;     // baseline: el más nuevo
+  // precio ajustado a refKm/refYr
+  cars.forEach(c=>{
+    let adj=c.precio;
+    if(adj!=null){
+      if(c.km!=null) adj += (c.km-refKm)*kmF/1000;       // mas km -> sube su valor equivalente a menos km
+      if(c.anio!=null) adj += (refYr-c.anio)*yrF;        // mas viejo -> sube a equivalente nuevo
+    }
+    c.adj=adj;
+  });
+  const adjs=cars.map(c=>c.adj).filter(v=>v!=null);
+  const minAdj=Math.min(...adjs);
+
+  // ---- tabla comparativa ----
+  const rowsDef=[
+    ['Precio anuncio', c=>eur(c.precio), 'min'],
+    ['Año', c=>c.anio||'—','max'],
+    ['Km', c=>fmt(c.km,' km'),'min'],
+    ['CV', c=>c.cv||'—','max'],
+    ['Combustible', c=>c.comb,''],
+    ['€ / CV', c=>(c.precio&&c.cv)?eur(c.precio/c.cv):'—','min'],
+    ['€ / 1.000 km restantes*', c=>(c.precio!=null&&c.km!=null)?eur(c.precio/Math.max(1,(250000-c.km)/1000)):'—','min'],
+    ['Nº extras detectados', c=>c.extras.length,'max'],
+  ];
+  let th='<th>Característica</th>'+cars.map(c=>`<th><span class="dot" style="display:inline-block;background:${COLORS[c.i]}"></span> ${esc(c.name)}</th>`).join('');
+  let body='';
+  rowsDef.forEach(([lab,fn,opt])=>{
+    const raw=cars.map(c=>{ // numeric for best/worst
+      if(lab==='Precio anuncio')return c.precio; if(lab==='Año')return c.anio; if(lab==='Km')return c.km;
+      if(lab==='CV')return c.cv; if(lab==='€ / CV')return (c.precio&&c.cv)?c.precio/c.cv:null;
+      if(lab.startsWith('€ / 1.000'))return (c.precio!=null&&c.km!=null)?c.precio/Math.max(1,(250000-c.km)/1000):null;
+      if(lab.startsWith('Nº'))return c.extras.length; return null;});
+    const valid=raw.filter(v=>v!=null);
+    let best=null; if(opt==='min'&&valid.length)best=Math.min(...valid); if(opt==='max'&&valid.length)best=Math.max(...valid);
+    body+='<tr><td class="lab">'+lab+'</td>'+cars.map((c,k)=>{
+      const cls=(best!=null&&raw[k]===best)?' class="best"':''; return `<td${cls}>${fn(c)}</td>`;
+    }).join('')+'</tr>';
+  });
+  // fila precio ajustado
+  body+='<tr><td class="lab"><b>Precio AJUSTADO</b><br><span class="mini">a '+fmt(refKm,' km')+' y '+refYr+'</span></td>'+
+    cars.map(c=>{const b=(c.adj!=null&&Math.abs(c.adj-minAdj)<1);return `<td class="${b?'best':''}"><b>${eur(c.adj)}</b></td>`;}).join('')+'</tr>';
+
+  let html='<h2 class="sec">Tabla comparativa</h2><table><tr>'+th+'</tr>'+body+'</table>'+
+    '<p class="mini">*€ por cada 1.000 km “de vida” restantes (asumiendo 250.000 km de vida útil): más bajo = pagas menos por km que te queda.</p>';
+
+  // ---- veredicto precio ajustado ----
+  const ranked=[...cars].filter(c=>c.adj!=null).sort((a,b)=>a.adj-b.adj);
+  if(ranked.length>=2){
+    const gap=ranked[1].adj-ranked[0].adj;
+    html+='<h2 class="sec">¿Cuál es la mejor compra (igualando km y año)?</h2>';
+    html+=`<div class="note">Poniendo todos los coches en igualdad de condiciones (mismos ${fmt(refKm,' km')} y año ${refYr}), el más barato es <b style="color:${COLORS[ranked[0].i]}">${esc(ranked[0].name)}</b> con un precio ajustado de <span class="big">${eur(ranked[0].adj)}</span>. `+
+    `Le saca <b>${eur(gap)}</b> al siguiente. <br><span class="mini">Ojo: el “ajustado” no valora los extras — míralos abajo, porque parte de la diferencia puede estar justificada por equipamiento.</span></div>`;
+  }
+
+  // ---- equipamiento ----
+  const allEx=[...new Set(cars.flatMap(c=>c.extras))].sort();
+  if(allEx.length){
+    html+='<h2 class="sec">Equipamiento / extras</h2><table><tr><th>Extra</th>'+cars.map(c=>`<th>${esc(c.name)}</th>`).join('')+'</tr>';
+    allEx.forEach(e=>{ html+='<tr><td class="lab">'+e+'</td>'+cars.map(c=>c.extras.includes(e)?'<td class="yes">✓</td>':'<td class="no">·</td>').join('')+'</tr>'; });
+    html+='</table>';
+  }
+
+  // ---- similitud ----
+  html+='<h2 class="sec">¿Cuánto se parecen? (¿tiene sentido comparar sus precios?)</h2>';
+  html+='<table><tr><th></th>'+cars.map(c=>`<th>${esc(c.name)}</th>`).join('')+'</tr>';
+  for(let a=0;a<cars.length;a++){
+    html+='<tr><td class="lab">'+esc(cars[a].name)+'</td>';
+    for(let b=0;b<cars.length;b++){
+      if(a===b){html+='<td style="background:#1c242d">—</td>';continue;}
+      const s=similitud(cars[a],cars[b]);
+      const pc=s>=75?'best':(s>=50?'':'worst');
+      html+=`<td class="${pc}"><b>${s}%</b></td>`;
+    }
+    html+='</tr>';
+  }
+  html+='</table>';
+  // verdicto por pares
+  let pares='';
+  for(let a=0;a<cars.length;a++)for(let b=a+1;b<cars.length;b++){
+    const s=similitud(cars[a],cars[b]);
+    const cl=s>=75?'pg':(s>=50?'pa':'pr');
+    const v=s>=75?'Muy comparables — el precio se puede comparar directamente':(s>=50?'Comparables con matices — ajusta por las diferencias':'Distintos — comparar sus precios directamente engaña');
+    pares+=`<div style="margin:6px 0"><span class="pill ${cl}">${s}%</span> <b>${esc(cars[a].name)}</b> vs <b>${esc(cars[b].name)}</b> — ${v}</div>`;
+  }
+  html+='<div class="note">'+pares+'</div>';
+
+  // enlaces
+  const links=cars.filter(c=>c.link).map(c=>`<a href="${esc(c.link)}" target="_blank">${esc(c.name)}</a>`).join(' · ');
+  if(links) html+='<div class="note"><b>Anuncios:</b> '+links+'</div>';
+
+  document.getElementById('results').innerHTML=html;
+  document.getElementById('howto').classList.add('hide');
+  document.getElementById('results').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function esc(s){return (''+s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+render();
+</script>
+</body>
+</html>
