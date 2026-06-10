@@ -104,6 +104,18 @@ const MODELOS_MOB={
  'Volvo':['C30','C40','C70','EX30','EX40','EX60','EX90','S40','S60','S70','S80','S90','V40','V50','V60','V70','V90','V90 Cross Country','XC 40','XC 60','XC 70','XC 90']
 };
 
+// Clave de marca en el refdata de mobile.de (para el parámetro classification)
+const MARCAS_REFKEY={
+ 'Alfa Romeo':'ALFA ROMEO','Audi':'AUDI','BMW':'BMW','Citroën':'CITROEN','Cupra':'CUPRA',
+ 'Dacia':'DACIA','DS Automobiles':'DS','Fiat':'FIAT','Ford':'FORD','Honda':'HONDA',
+ 'Hyundai':'HYUNDAI','Jaguar':'JAGUAR','Jeep':'JEEP','Kia':'KIA','Land Rover':'LAND ROVER',
+ 'Lexus':'LEXUS','Mazda':'MAZDA','Mercedes-Benz':'MERCEDES-BENZ','MINI':'MINI',
+ 'Mitsubishi':'MITSUBISHI','Nissan':'NISSAN','Opel':'OPEL','Peugeot':'PEUGEOT',
+ 'Porsche':'PORSCHE','Renault':'RENAULT','Seat':'SEAT','Skoda':'SKODA','Smart':'SMART',
+ 'Subaru':'SUBARU','Suzuki':'SUZUKI','Tesla':'TESLA','Toyota':'TOYOTA',
+ 'Volkswagen':'VW','Volvo':'VOLVO'
+};
+
 // marca: [mobileId, cochesSlug]
 const MARCAS={
  'Audi':[1900,'audi'],'BMW':[3500,'bmw'],'Mercedes-Benz':[17200,'mercedes_benz'],'Volkswagen':[25200,'volkswagen'],
@@ -141,13 +153,17 @@ function slug(s){ return s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'')
 function buildMobile(){
   const m=val('marca'),mod=val('modelo'),anio=val('anio'),pr=val('precio'),km=val('km'),cb=val('comb'),co=val('color');
   let u='https://suchen.mobile.de/fahrzeuge/search.html?dam=false&isSearchRequest=true&vc=Car&sb=rel';
-  if(MARCAS[m]) u+='&makeModelVariant1.makeId='+MARCAS[m][0];
-  if(mod) u+='&q='+encodeURIComponent(mod);
+  const refKey=MARCAS_REFKEY[m];
+  if(mod&&refKey){
+    u+='&classification=refdata/classes/Car/makes/'+encodeURIComponent(refKey)+'/models/'+encodeURIComponent(mod);
+  } else if(MARCAS[m]){
+    u+='&makeModelVariant1.makeId='+MARCAS[m][0];
+  }
   if(anio) u+='&fr='+anio+'%3A';
   if(pr) u+='&p=%3A'+pr;
   if(km) u+='&ml=%3A'+km;
   if(cb&&FT_MOB[cb]) u+='&ft='+FT_MOB[cb];
-  if(co&&COL_MOB[co]) u+='&colors='+COL_MOB[co];
+  if(co&&COL_MOB[co]) u+='&exteriorColor='+COL_MOB[co];
   return u;
 }
 function buildCochesnet(){
