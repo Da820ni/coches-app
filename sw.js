@@ -5,9 +5,9 @@ const ASSETS = [
   '/Buscador_coches_cliente.html',
   '/Comparador_coches_DE_ES.html',
   '/manifest.webmanifest',
-  '/icons/icon-192.png',
-  '/icons/icon-512.png',
-  '/icons/apple-touch-icon.png'
+  '/icon-192.png',
+  '/icon-512.png',
+  '/apple-touch-icon.png'
 ];
 
 self.addEventListener('install', e => {
